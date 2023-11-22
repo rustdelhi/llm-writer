@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git clone https://github.com/IshanGrover2004/llm-chat.git && cd llm-chat
+git clone https://github.com/rustdelhi/llm-writer.git && cd llm-writer
 
 download_url="https://huggingface.co/rustformers/open-llama-ggml/resolve/main/open_llama_3b-f16.bin"
 
