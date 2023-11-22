@@ -1,7 +1,7 @@
 use std::{convert::Infallible, io::Write, path::PathBuf};
 
 use axum::{response::IntoResponse, Json};
-use llm::Model;
+use llm::{InferenceSessionConfig, Model, ModelParameters, OutputRequest};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -31,28 +31,29 @@ pub(crate) struct Prompt {
 impl Prompt {
     /// Gets the prompt string.
     pub fn get_prompt(&self) -> Option<String> {
-        self.prompt.to_owned()
+        self.prompt.clone()
     }
 
     /// Generates a reply for the given prompt.
     pub fn generate_reply(&mut self) -> impl IntoResponse {
-        self.get_prompt()
-            .map(|_| -> Json<_> {
+        self.get_prompt().map_or(
+            Json(json!({"suggestion": "type something in input box"})),
+            |_| -> Json<_> {
                 self.infer().expect("Unable to generate LLM response");
                 Json(json!({
                 "prompt": self.prompt, "response": self.response
                 }))
-            })
-            .unwrap_or(Json(json!({"suggestion": "type something in input box"})))
+            },
+        )
     }
 
     /// Performs inference based on the prompt and updates the response.
     pub fn infer(&mut self) -> anyhow::Result<()> {
         let start_time = std::time::Instant::now().elapsed().as_millis();
-        println!("Model fully loaded! Elapsed: {}ms", start_time);
+        println!("Model fully loaded! Elapsed: {start_time}ms");
 
         // ---------- Starting session --------------
-        let mut session = MODEL.start_session(Default::default());
+        let mut session = MODEL.start_session(InferenceSessionConfig::default());
 
         let inference_request = &llm::InferenceRequest {
             prompt: (self.prompt.as_deref().unwrap()).into(),
@@ -71,7 +72,7 @@ impl Prompt {
                 // Request for inference
                 inference_request,
                 // Output request
-                &mut Default::default(),
+                &mut OutputRequest::default(),
                 // Inference response
                 |r| match r {
                     llm::InferenceResponse::PromptToken(t)
@@ -104,7 +105,7 @@ pub fn load_model() -> anyhow::Result<Box<dyn Model>> {
         Some(model_architecture),
         &model_path,
         tokenizer_source,
-        Default::default(),
+        ModelParameters::default(),
         llm::load_progress_callback_stdout,
     )
     .map_err(|e| InferenceError::UnableToLoadModel(e.to_string()))?)
