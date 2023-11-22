@@ -19,7 +19,7 @@
 
 ### Introduction
 
-This project is a demonstration of a Large Language Model (LLM) chatbot built using Rust and the Axum web framework. It showcases the capabilities of Large Language Models in natural language understanding and generation.
+This project is a demonstration of a Large Language Model (LLM) writer built using Rust and the Axum web framework. It showcases the capabilities of Large Language Models in natural language understanding and generation.
 
 ### What is LLM (Large Language Model)?
 
